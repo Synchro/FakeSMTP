@@ -46,16 +46,16 @@ If you want to autostart the SMTP server at launch, you can use the `-s` argumen
     java -jar fakeSMTP-VERSION.jar -s
     java -jar fakeSMTP-VERSION.jar --start-server
 
-If you want to autostart the SMTP server without a GUI (background) on a different port:
+If you want to autostart the SMTP server without a GUI (background) on a different port and bound to the loopback address:
 
-    java -jar fakeSMTP-VERSION.jar -s -b -p 2525
-    java -jar fakeSMTP-VERSIon.jar --start-server --background --port 2525
+    java -jar fakeSMTP-VERSION.jar -s -b -p 2525 -a 127.0.0.1
+    java -jar fakeSMTP-VERSION.jar --start-server --background --port 2525 --bind-address 127.0.0.1
 
 If you don't need to save emails on the filesystem (to improve the overall performances), you can use the `-m` (memory mode) argument:
 
     java -jar fakeSMTP-VERSION.jar -m
 
-To see all the available options (relay domains...):
+To see all the available options (relay domains, custom eml-viewer...):
 
     java -jar fakeSMTP-VERSION.jar --help
 
@@ -111,7 +111,7 @@ You can then run the following command:
 
 
 Change the default port for unit/integration tests
---------------------------------------------------------
+--------------------------------------------------
 
 You need to modify the following file:
 `src/test/java/com/nilhcem/fakesmtp/core/test/TestConfig.java`.
@@ -119,12 +119,47 @@ You need to modify the following file:
 Please note that it is better to have two different ports for unit and integrations tests, to avoid any port binding exception while running Maven's `integration-test` goal.
 
 
-Import the project on Eclipse IDE
----------------------------------
+Usage on Docker
+---------------
 
-Run the following command:
+* Run distributed version: [Dockerfile](https://github.com/Nilhcem/FakeSMTP/blob/master/Dockerfile)
 
-    mvn eclipse:eclipse
+      `docker build -t="mail" github.com/Nilhcem/FakeSMTP`
+
+      `docker run -ti -p 250:25 --privileged=true -v /mail:/output mail`
+
+
+* Build from source
+
+Get sources from GitHub: [Dockerfile](https://github.com/Nilhcem/FakeSMTP/blob/master/src/main/docker/Dockerfile)
+
+    git clone https://github.com/Nilhcem/FakeSMTP
+    cd FakeSMTP
+
+Build the docker image
+
+    mvn package docker:build -DskipTests
+
+Run the docker image
+
+    docker run -ti -d fakesmtp
+
+Configure container
+
+* Map the SMTP port 25 to host:
+
+    `-p 250:25`
+
+* Map volume for received mails:
+
+    `--privileged=true  -v /mail-data:/output`
+
+Full command
+
+* Foward fakesmtp:25 to host port 250,
+* mount host folder /home/fakesmtp/mail as container folder /output
+
+    `docker run -ti -d -p 250:25 --privileged=true -v /home/fakesmtp/mail:/output fakesmtp`
 
 
 Contact me

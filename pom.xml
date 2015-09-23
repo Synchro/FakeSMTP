@@ -4,7 +4,7 @@
 
 	<groupId>com.nilhcem.fakesmtp</groupId>
 	<artifactId>fakesmtp</artifactId>
-	<version>1.8-SNAPSHOT</version>
+	<version>2.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Fake SMTP</name>
@@ -14,6 +14,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
+		<docker.image>fakesmtp</docker.image>
 	</properties>
 
 	<dependencies>
@@ -21,28 +22,26 @@
 		<dependency>
 			<groupId>com.miglayout</groupId>
 			<artifactId>miglayout-swing</artifactId>
-			<version>4.2</version>
+			<version>5.0</version>
 		</dependency>
 
 		<!-- SubEtha SMTP: easy-to-use server-side SMTP library for Java -->
-		<!-- Do not upgrade, as version 3.1.7 prevents us from restarting the SMTP server -->
-		<!-- See http://code.google.com/p/subethasmtp/issues/detail?id=48 -->
 		<dependency>
 		    <groupId>org.subethamail</groupId>
 		    <artifactId>subethasmtp</artifactId>
-		    <version>3.1.6</version>
+		    <version>3.1.7</version>
 		</dependency>
 
 		<!-- Logging: slf4j + logback -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.7</version>
+			<version>1.7.12</version>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>1.1.2</version>
+			<version>1.1.3</version>
 		</dependency>
 
 		<!-- Commons IO: utilities to assist with developing IO functionality -->
@@ -70,13 +69,13 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.11</version>
+			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.commons</groupId>
 		    <artifactId>commons-email</artifactId>
-		    <version>1.3.2</version>
+		    <version>1.3.3</version>
 		    <scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -89,7 +88,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
+				<version>3.3</version>
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
@@ -100,7 +99,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>2.17</version>
+				<version>2.18.1</version>
 				<executions>
 					<execution>
 						<id>integration-test</id>
@@ -121,7 +120,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.4</version>
+				<version>2.5.4</version>
 				<configuration>
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
@@ -146,14 +145,14 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
-				<version>3.3</version>
+				<version>3.4</version>
 				<configuration>
 					<reportPlugins>
 						<!-- Information about the project -->
 						<plugin>
 							<groupId>org.apache.maven.plugins</groupId>
 							<artifactId>maven-project-info-reports-plugin</artifactId>
-							<version>2.7</version>
+							<version>2.8</version>
 							<reports>
 								<report>license</report>
 								<report>project-team</report>
@@ -170,14 +169,14 @@
 						<plugin>
 							<groupId>org.apache.maven.plugins</groupId>
 							<artifactId>maven-surefire-report-plugin</artifactId>
-							<version>2.17</version>
+							<version>2.18.1</version>
 						</plugin>
 
 						<!-- Javadoc -->
 						<plugin>
 							<groupId>org.apache.maven.plugins</groupId>
 							<artifactId>maven-javadoc-plugin</artifactId>
-							<version>2.9.1</version>
+							<version>2.10.3</version>
 							<reportSets>
 								<reportSet>
 									<reports>
@@ -191,7 +190,7 @@
 						<plugin>
 							<groupId>org.codehaus.mojo</groupId>
 							<artifactId>findbugs-maven-plugin</artifactId>
-							<version>2.5.3</version>
+							<version>3.0.1</version>
 							<configuration>
 								<linkXref>true</linkXref>
 								<threshold>High</threshold>
@@ -203,7 +202,7 @@
 						<plugin>
 							<groupId>org.apache.maven.plugins</groupId>
 							<artifactId>maven-pmd-plugin</artifactId>
-							<version>3.1</version>
+							<version>3.4</version>
 							<configuration>
 								<linkXref>true</linkXref>
 								<sourceEncoding>utf-8</sourceEncoding>
@@ -215,7 +214,7 @@
 						<plugin>
 							<groupId>org.apache.maven.plugins</groupId>
 							<artifactId>maven-checkstyle-plugin</artifactId>
-							<version>2.12.1</version>
+							<version>2.15</version>
 							<configuration>
 								<linkXref>true</linkXref>
 								<sourceEncoding>UTF-8</sourceEncoding>
@@ -248,9 +247,27 @@
 						<plugin>
 							<groupId>org.apache.maven.plugins</groupId>
 							<artifactId>maven-jxr-plugin</artifactId>
-							<version>2.4</version>
+							<version>2.5</version>
 						</plugin>
 					</reportPlugins>
+				</configuration>
+			</plugin>
+
+			<!-- Docker -->
+			<plugin>
+				<groupId>com.spotify</groupId>
+				<artifactId>docker-maven-plugin</artifactId>
+				<version>0.3.2</version>
+				<configuration>
+					<imageName>${docker.image}</imageName>
+					<dockerDirectory>src/main/docker</dockerDirectory>
+					<resources>
+						<resource>
+							<targetPath>/</targetPath>
+							<directory>${project.build.directory}</directory>
+							<include>${project.build.finalName}.jar</include>
+						</resource>
+					</resources>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -288,6 +305,30 @@
 		<contributor>
 			<name>essobedo</name>
 			<url>https://github.com/essobedo</url>
+		</contributor>
+		<contributor>
+			<name>rellem</name>
+			<url>https://github.com/rellem</url>
+		</contributor>
+		<contributor>
+			<name>nakag</name>
+			<url>https://github.com/nakag</url>
+		</contributor>
+		<contributor>
+			<name>pawel-piecyk</name>
+			<url>https://github.com/pawel-piecyk</url>
+		</contributor>
+		<contributor>
+			<name>modeckimellett</name>
+			<url>https://github.com/modeckimellett</url>
+		</contributor>
+		<contributor>
+			<name>Vest</name>
+			<url>https://github.com/Vest</url>
+		</contributor>
+		<contributor>
+			<name>evrycollin</name>
+			<url>https://github.com/evrycollin</url>
 		</contributor>
 	</contributors>
 

@@ -10,6 +10,7 @@ import com.nilhcem.fakesmtp.server.MailSaver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.mail.internet.MimeUtility;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -22,6 +23,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.Observable;
 import java.util.Observer;
@@ -71,11 +73,11 @@ public final class MailsListPane implements Observer {
 	/**
 	 * Creates the table and sets its cells as non editable.
 	 * <p>
-	 * Adds some mouse events on the table, to display emails, when a user click on
+	 * Adds some mouse events on the table, to display emails, when a user clicks on
 	 * a specific row.<br>
 	 * If the email can't be found, an error message will be displayed.<br>
 	 * The table will reset the size of its column every time the size of the table changed
-	 * (for example when the user maximize the window).
+	 * (for example when the user maximizes the window).
 	 * </p>
 	 */
 	public MailsListPane() {
@@ -104,7 +106,10 @@ public final class MailsListPane implements Observer {
 
 				@Override
 				public void mouseClicked(MouseEvent e) {
-					if (e.getClickCount() == 2 && desktop != null) {
+
+					String emlViewer = ArgsHandler.INSTANCE.getEmlViewer();
+
+					if (e.getClickCount() == 2 && (emlViewer != null || desktop != null)) {
 						File file = null;
 						JTable target = (JTable) e.getSource();
 						String fileName = UIModel.INSTANCE.getListMailsMap().get(target.getSelectedRow());
@@ -116,7 +121,11 @@ public final class MailsListPane implements Observer {
 
 						if (file != null && file.exists()) {
 							try {
-								desktop.open(file);
+								if (emlViewer != null) {
+									Runtime.getRuntime().exec(emlViewer + " " + file.getAbsolutePath());
+								} else {
+									desktop.open(file);
+								}
 							} catch (IOException ioe) {
 								LOGGER.error("", ioe);
 								displayError(String.format(i18n.get("mailslist.err.open"), file.getAbsolutePath()));
@@ -189,8 +198,15 @@ public final class MailsListPane implements Observer {
 	public void update(Observable o, Object arg) {
 		if (o instanceof MailSaver) {
 			EmailModel email = (EmailModel) arg;
-			model.addRow(new Object[] {dateFormat.format(email.getReceivedDate()),
-					email.getFrom(), email.getTo(), email.getSubject()});
+			String subject;
+			try {
+				subject = MimeUtility.decodeText(email.getSubject());
+			} catch (UnsupportedEncodingException e) {
+				LOGGER.error("", e);
+				subject = email.getSubject();
+			}
+
+			model.addRow(new Object[] {dateFormat.format(email.getReceivedDate()), email.getFrom(), email.getTo(), subject});
 			UIModel.INSTANCE.getListMailsMap().put(nbElements++, email.getFilePath());
 		} else if (o instanceof ClearAllButton) {
 			// Delete information from the map

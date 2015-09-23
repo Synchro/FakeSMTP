@@ -1,3 +1,4 @@
+
 package com.nilhcem.fakesmtp.core;
 
 import ch.qos.logback.classic.Level;
@@ -50,9 +51,20 @@ public enum ArgsHandler {
 	private static final String OPT_MEMORYMODE_LONG = "memory-mode";
 	private static final String OPT_MEMORYMODE_DESC = "Disable the persistence in order to avoid the overhead that it adds";
 
+	private static final String OPT_BINDADDRESS_SHORT = "a";
+	private static final String OPT_BINDADDRESS_LONG = "bind-address";
+	private static final String OPT_BINDADDRESS_DESC = "IP address or hostname to bind to. Binds to all local IP addresses if not specified. Only works together with the -" + OPT_BACKGROUNDSTART_SHORT + " (--" +  OPT_BACKGROUNDSTART_LONG + ") argument.";
+
+	private static final String OPT_EMLVIEWER_SHORT = "e";
+	private static final String OPT_EMLVIEWER_LONG = "eml-viewer";
+	private static final String OPT_EMLVIEWER_DESC = "Executable of program used for viewing emails";
+
 	private final Options options;
 
 	private String port;
+	private String bindAddress;
+	private String outputDirectory;
+	private String emlViewer;
 	private boolean backgroundStart;
 	private boolean startServerAtLaunch;
 	private boolean memoryModeEnabled;
@@ -60,14 +72,16 @@ public enum ArgsHandler {
 	/**
 	 * Handles command line arguments.
 	 */
-	private ArgsHandler() {
+	ArgsHandler() {
 		options = new Options();
 		options.addOption(OPT_EMAILS_DIR_SHORT, OPT_EMAILS_DIR_LONG, true, OPT_EMAILS_DESC);
 		options.addOption(OPT_AUTOSTART_SHORT, OPT_AUTOSTART_LONG, false, OPT_AUTOSTART_DESC);
 		options.addOption(OPT_PORT_SHORT, OPT_PORT_LONG, true, OPT_PORT_DESC);
+		options.addOption(OPT_BINDADDRESS_SHORT, OPT_BINDADDRESS_LONG, true, OPT_BINDADDRESS_DESC);
 		options.addOption(OPT_BACKGROUNDSTART_SHORT, OPT_BACKGROUNDSTART_LONG, false, OPT_BACKGROUNDSTART_DESC);
 		options.addOption(OPT_RELAYDOMAINS_SHORT, OPT_RELAYDOMAINS_LONG, true, OPT_RELAYDOMAINS_DESC);
 		options.addOption(OPT_MEMORYMODE_SHORT, OPT_MEMORYMODE_LONG, false, OPT_MEMORYMODE_DESC);
+		options.addOption(OPT_EMLVIEWER_SHORT, OPT_EMLVIEWER_LONG, true, OPT_EMLVIEWER_DESC);
 	}
 
 	/**
@@ -80,15 +94,17 @@ public enum ArgsHandler {
 		CommandLineParser parser = new GnuParser();
 		CommandLine cmd = parser.parse(options, args);
 
-		String outputDir = cmd.getOptionValue(OPT_EMAILS_DIR_SHORT);
-		if (outputDir != null) {
-			UIModel.INSTANCE.setSavePath(outputDir);
+		outputDirectory = cmd.getOptionValue(OPT_EMAILS_DIR_SHORT);
+		if (outputDirectory != null) {
+			UIModel.INSTANCE.setSavePath(outputDirectory);
 		}
 
 		port = cmd.getOptionValue(OPT_PORT_SHORT);
+		bindAddress = cmd.getOptionValue(OPT_BINDADDRESS_SHORT);
 		startServerAtLaunch = cmd.hasOption(OPT_AUTOSTART_SHORT);
 		backgroundStart = cmd.hasOption(OPT_BACKGROUNDSTART_SHORT);
 		memoryModeEnabled = cmd.hasOption(OPT_MEMORYMODE_SHORT);
+		emlViewer = cmd.getOptionValue(OPT_EMLVIEWER_SHORT);
 
 		// Change SMTP server log level to info if memory mode was enabled to improve performance
 		if (memoryModeEnabled) {
@@ -102,6 +118,11 @@ public enum ArgsHandler {
 				domains.add(domain.trim());
 			}
 			UIModel.INSTANCE.setRelayDomains(domains);
+		}
+
+		// Host binding for GUI
+		if (bindAddress != null) {
+			UIModel.INSTANCE.setHost(bindAddress);
 		}
 	}
 
@@ -136,11 +157,32 @@ public enum ArgsHandler {
 	}
 
 	/**
+	 * @return the bind address, as specified by the user, or a {@code null} string if unspecified.
+	 */
+	public String getBindAddress() {
+		return bindAddress;
+	}
+
+	/**
+	 * @return the output directory, as specified by the user, or a {@code null} string if unspecified.
+	 */
+	public String getOutputDirectory() {
+		return outputDirectory;
+	}
+
+	/**
 	 * @return whether or not the SMTP server should disable the persistence in order to avoid the overhead that it adds.
 	 * This is particularly useful when we launch performance tests that massively send emails.
 	 */
 	public boolean memoryModeEnabled() {
-	   return memoryModeEnabled;
+		return memoryModeEnabled;
+	}
+
+	/**
+	 * @return the name of executable used for viewing eml files, as specified by the user, or a {@code null} string if unspecified.
+	 */
+	public String getEmlViewer() {
+		return emlViewer;
 	}
 
 	/**

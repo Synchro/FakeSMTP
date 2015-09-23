@@ -10,13 +10,11 @@ import javax.swing.JOptionPane;
 
 import com.nilhcem.fakesmtp.core.Configuration;
 import com.nilhcem.fakesmtp.core.I18n;
-import com.nilhcem.fakesmtp.core.exception.BindPortException;
-import com.nilhcem.fakesmtp.core.exception.InvalidPortException;
-import com.nilhcem.fakesmtp.core.exception.OutOfRangePortException;
+import com.nilhcem.fakesmtp.core.exception.*;
 import com.nilhcem.fakesmtp.model.UIModel;
 
 /**
- * Button to start / stop the SMTP server.
+ * Button to start the SMTP server.
  *
  * @author Nilhcem
  * @since 1.0
@@ -27,7 +25,7 @@ public final class StartServerButton extends Observable implements Observer {
 	private final JButton button = new JButton(i18n.get("startsrv.start"));
 
 	/**
-	 * Creates a start / stop button to start and stop the SMTP server.
+	 * Creates a start button to start the SMTP server.
 	 * <p>
 	 * If the user selects a wrong port before starting the server, the method will display an error message.
 	 * </p>
@@ -49,8 +47,10 @@ public final class StartServerButton extends Observable implements Observer {
 	public void toggleButton() {
 		try {
 			UIModel.INSTANCE.toggleButton();
+		} catch (InvalidHostException ihe) {
+			displayError(String.format(i18n.get("startsrv.err.invalidHost"), ihe.getHost()));
 		} catch (InvalidPortException ipe) {
-			displayError(String.format(i18n.get("startsrv.err.invalid")));
+			displayError(String.format(i18n.get("startsrv.err.invalidPort")));
 		} catch (BindPortException bpe) {
 			displayError(String.format(i18n.get("startsrv.err.bound"), bpe.getPort()));
 		} catch (OutOfRangePortException orpe) {
@@ -59,13 +59,10 @@ public final class StartServerButton extends Observable implements Observer {
 			displayError(String.format(i18n.get("startsrv.err.default"), re.getMessage()));
 		}
 
-		String btnText;
 		if (UIModel.INSTANCE.isStarted()) {
-			btnText = i18n.get("startsrv.stop");
-		} else {
-			btnText = i18n.get("startsrv.start");
+			button.setText(i18n.get("startsrv.started"));
+			button.setEnabled(false);
 		}
-		button.setText(btnText);
 		setChanged();
 		notifyObservers();
 	}

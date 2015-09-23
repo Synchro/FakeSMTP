@@ -3,7 +3,7 @@
  -----
  Nilhcem
  -----
- May 2014
+ May 2015
 
 Overview
 
@@ -41,10 +41,10 @@ you can use the -o argument:
 +--
 
  You can also start the SMTP server automatically at launch (-s argument) on a different port (-p argument) with no gui (-b argument),\
-the following example will autostart the SMTP server on the port 2525:
+the following example will autostart the SMTP server on the port 2525 and bound to the loopback address (-a argument):
 
 +--
- java -jar fakeSMTP.jar -s -b -p 2525
+ java -jar fakeSMTP.jar -s -b -p 2525 -a 127.0.0.1
 +--
 
  If you don't need to save emails on the filesystem (to improve the overall performances), you can use the `-m` (memory mode) argument:
@@ -53,10 +53,65 @@ the following example will autostart the SMTP server on the port 2525:
  java -jar fakeSMTP-VERSION.jar -m
 +--
 
- To see the available options (relay domains...), run:
+ To see the available options (relay domains, custom eml-viewer...), run:
 
 +--
  java -jar fakeSMTP.jar --help
++--
+
+
+* Usage on Docker
+
+ * Run distributed version: {{{https://github.com/Nilhcem/FakeSMTP/blob/master/Dockerfile}Dockerfile}}
+
++--
+ docker build -t="mail" github.com/Nilhcem/FakeSMTP
+ docker run -ti -p 250:25 --privileged=true -v /mail:/output mail
++--
+
+ * Build from source
+
+ Get sources from GitHub: {{{https://github.com/Nilhcem/FakeSMTP/blob/master/src/main/docker/Dockerfile}Dockerfile}}
+
++--
+ git clone https://github.com/Nilhcem/FakeSMTP
+ cd FakeSMTP
++--
+
+ Build the docker image
+
++--
+ mvn package docker:build -DskipTests
++--
+
+ Run the docker image
+
++--
+ docker run -ti -d fakesmtp
++--
+
+ Configure container
+
+ * Map the SMTP port 25 to host:
+
++--
+ -p 250:25
++--
+
+ * Map volume for received mails:
+
++--
+ --privileged=true  -v /mail-data:/output
++--
+
+ Full command
+
+ * Foward fakesmtp:25 to host port 250,
+
+ * mount host folder /home/fakesmtp/mail as container folder /output
+
++--
+ docker run -ti -d -p 250:25 --privileged=true -v /home/fakesmtp/mail:/output fakesmtp
 +--
 
 
